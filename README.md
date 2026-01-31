@@ -2,6 +2,8 @@
 
 Audio Priority is a macOS CLI daemon that automatically manages audio device priorities. Configure preferred input/output order and let the daemon keep your defaults in sync as devices connect and disconnect.
 
+Website: https://badalotti.dev/audio-priority
+
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-6.2-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
