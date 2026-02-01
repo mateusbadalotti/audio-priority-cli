@@ -20,6 +20,12 @@ Website: https://badalotti.dev/audio-priority
 ### Requirements
 - macOS 14.0 (Sonoma) or later
 
+### Homebrew
+
+```bash
+brew install mateusbadalotti/audio-priority-cli/audio-priority-cli
+```
+
 ### Build from Source
 
 ```bash

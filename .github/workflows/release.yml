@@ -64,6 +64,13 @@ jobs:
         with:
           name: audio-priority
           path: release
+      - name: Resolve tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "RELEASE_TAG=${TAG}" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=${TAG#v}" >> "$GITHUB_ENV"
+      - name: Compute checksum
+        run: echo "ASSET_SHA256=$(sha256sum release/audio-priority.zip | awk '{print $1}')" >> "$GITHUB_ENV"
 
       - name: Create Tagged Release
         uses: softprops/action-gh-release@v1
@@ -73,3 +80,49 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update Homebrew tap
+        env:
+          TAP_REPO: mateusbadalotti/homebrew-audio-priority-cli
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "Missing HOMEBREW_TAP_GITHUB_TOKEN secret."
+            exit 1
+          fi
+
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/${TAP_REPO}.git" tap
+          if git -C tap rev-parse --verify master >/dev/null 2>&1; then
+            git -C tap checkout master
+          else
+            git -C tap checkout -b master
+          fi
+          mkdir -p tap/Formula
+
+          VERSION="${RELEASE_VERSION}"
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/audio-priority.zip"
+
+          cat > tap/Formula/audio-priority-cli.rb <<RUBY
+          class AudioPriorityCli < Formula
+            desc "macOS CLI daemon that manages audio device priorities"
+            homepage "https://badalotti.dev/audio-priority"
+            url "${URL}"
+            version "${VERSION}"
+            sha256 "${ASSET_SHA256}"
+            license "MIT"
+
+            depends_on macos: ">= :sonoma"
+
+            def install
+              bin.install "audio-priority"
+              prefix.install "Frameworks"
+            end
+          end
+          RUBY
+
+          cd tap
+          git add Formula/audio-priority-cli.rb
+          git commit -m "Update audio-priority-cli to ${VERSION}" || echo "No changes to commit."
+          git push -u origin master
