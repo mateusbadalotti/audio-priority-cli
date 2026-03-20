@@ -82,7 +82,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Update Homebrew tap
         env:
-          TAP_REPO: mateusbadalotti/homebrew-audio-priority-cli
+          TAP_REPO: mateusbadalotti/homebrew-tap
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
         run: |
           if [ -z "$TAP_TOKEN" ]; then
@@ -94,10 +94,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
 
           git clone "https://x-access-token:${TAP_TOKEN}@github.com/${TAP_REPO}.git" tap
-          if git -C tap rev-parse --verify master >/dev/null 2>&1; then
-            git -C tap checkout master
+          TAP_DEFAULT_BRANCH="$(git -C tap remote show origin | sed -n '/HEAD branch/s/.*: //p')"
+          if [ -z "$TAP_DEFAULT_BRANCH" ]; then
+            TAP_DEFAULT_BRANCH=main
+            git -C tap checkout -b "$TAP_DEFAULT_BRANCH"
           else
-            git -C tap checkout -b master
+            git -C tap checkout "$TAP_DEFAULT_BRANCH"
           fi
           mkdir -p tap/Formula
 
@@ -125,4 +127,4 @@ jobs:
           cd tap
           git add Formula/audio-priority-cli.rb
           git commit -m "Update audio-priority-cli to ${VERSION}" || echo "No changes to commit."
-          git push -u origin master
+          git push -u origin "$TAP_DEFAULT_BRANCH"

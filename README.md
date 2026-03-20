@@ -23,7 +23,7 @@ Website: https://badalotti.dev/audio-priority
 ### Homebrew
 
 ```bash
-brew install mateusbadalotti/audio-priority-cli/audio-priority-cli
+brew install mateusbadalotti/tap/audio-priority-cli
 ```
 
 ### Build from Source
